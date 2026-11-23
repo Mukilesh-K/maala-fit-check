@@ -9,7 +9,7 @@ import {renderMedia, selectComposition} from '@remotion/renderer';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(ROOT, 'out', 'explainers');
-const PAGE = path.join(ROOT, 'model_lit.html');
+const PAGE = path.join(ROOT, 'index.html');
 const PORT = Number(process.env.PORT) || 3123;
 fs.mkdirSync(OUT, {recursive: true});
 
