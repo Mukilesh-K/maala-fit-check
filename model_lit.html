@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Can My Computer Run This AI? — Ink-wash explainer</title>
+<style>
+  :root{--paper:#eeeae0;--ink:#1b1a18;--red:#b8352a;--soft:#5a574f;--wash:#1b1a1814}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:Baskerville,"Iowan Old Style",Georgia,serif;line-height:1.5}
+  header{text-align:center;padding:36px 16px 8px}
+  h1{margin:0;font-size:2.4rem;letter-spacing:.5px}
+  header p{margin:6px 0 0;font-style:italic;color:var(--soft)}
+  .seal{display:inline-block;background:var(--red);color:var(--paper);font-weight:700;padding:4px 8px;margin-left:10px;font-size:1rem;vertical-align:middle;transform:rotate(-3deg)}
+  main{max-width:1100px;margin:0 auto;padding:16px}
+  form{border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:22px 4px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px 22px}
+  form h2{grid-column:1/-1;margin:0;font-size:1.4rem}
+  label{display:flex;flex-direction:column;gap:6px;font-weight:600}
+  small{font-weight:400;font-style:italic;color:var(--soft)}
+  input,select{font:inherit;padding:8px 2px;background:transparent;border:0;border-bottom:2px solid var(--ink);color:var(--ink);outline:none}
+  input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+  input:focus,select:focus{border-color:var(--red)}
+  .row{grid-column:1/-1;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .chips button{font-size:.85rem;padding:3px 10px;background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:20px}
+  .chips button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+  .detected{grid-column:1/-1;margin:-6px 0 0;font-style:italic;color:var(--soft);min-height:1.5em}
+  .detected b{color:var(--ink);font-style:normal}
+  button{font:inherit;font-size:1.1rem;padding:10px 22px;border:0;background:var(--ink);color:var(--paper);cursor:pointer;border-radius:2px}
+  button:disabled{opacity:.4;cursor:default}
+  #msg{font-style:italic}
+  #msg.err{color:var(--red)}
+  #prog{height:8px;background:#0001;margin:14px 0 0;display:none}
+  #prog div{height:100%;width:0;background:var(--ink);transition:width .4s}
+  video{width:100%;margin-top:20px;display:none;box-shadow:0 4px 24px #0003}
+  #dl{display:none;margin-top:10px;color:var(--red)}
+  .hide{display:none}
+
+  /* instant answer */
+  #result{margin-top:16px}
+  #verdict{display:flex;gap:18px;align-items:center;border-left:6px solid var(--ink);padding:6px 0 6px 18px}
+  #verdict.ok{border-color:#2f6b3f}#verdict.slow{border-color:#b9831f}#verdict.no{border-color:var(--red)}
+  #verdict h2{margin:0;font-size:1.6rem}
+  #verdict p{margin:4px 0 0}
+  .stamp{font-weight:700;color:var(--paper);background:var(--ink);padding:6px 10px;transform:rotate(-4deg);white-space:nowrap}
+  .ok .stamp{background:#2f6b3f}.slow .stamp{background:#b9831f}.no .stamp{background:var(--red)}
+  table{width:100%;border-collapse:collapse;margin:18px 0 6px}
+  caption{text-align:left;font-weight:600;padding-bottom:6px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--wash)}
+  th{font-weight:600;border-bottom:2px solid var(--ink)}
+  td.n{font-variant-numeric:tabular-nums}
+  tr.best td{background:#b8352a14;font-weight:600}
+  .mark{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .mark svg{width:26px;height:26px;flex:none;overflow:visible}
+  .mark path,.mark ellipse{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;filter:url(#inkrough)}
+  .mark.ok{color:#2f6b3f}.mark.slow{color:#b9831f}.mark.no{color:var(--red)}
+  .bar{height:10px;background:var(--wash);position:relative;min-width:120px}
+  .bar i{position:absolute;inset:0 auto 0 0;background:var(--ink);opacity:.55}
+  .bar i.over{background:var(--red);opacity:.8}
+  .note{margin:10px 0;padding:10px 14px;background:#1b1a180a}
+  .note b{color:var(--red)}
+  details{margin-top:16px}
+  summary{cursor:pointer;font-weight:600}
+  details ul{margin:8px 0 0;padding-left:20px;color:var(--soft)}
+  .scroll{overflow-x:auto}
+  button.i{width:18px;height:18px;padding:0;margin-left:4px;border-radius:50%;font:italic 700 .75rem/1 Georgia,serif;background:transparent;color:var(--ink);border:1.5px solid var(--ink);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;cursor:help}
+  button.i:hover,button.i[aria-expanded=true]{background:var(--ink);color:var(--paper)}
+  #tipbox{display:none;position:fixed;z-index:50;width:280px;max-width:calc(100vw - 16px);background:var(--ink);color:var(--paper);padding:10px 12px;font:400 .9rem/1.45 Baskerville,"Iowan Old Style",Georgia,serif;font-style:normal;border-radius:2px;box-shadow:0 6px 20px #0005;pointer-events:none}
+  .vinfo{font-size:.9rem;color:var(--soft)}
+  #report{margin-top:28px;border-top:3px solid var(--ink);padding-top:14px}
+  #report h2{margin:0;font-size:1.4rem}
+  #report.hide{display:none}
+  @media (max-width:600px){h1{font-size:1.8rem}#verdict{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <filter id="inkrough" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".09" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.6"/></filter>
+</defs></svg>
+<header>
+  <h1>Can My Computer Run This AI? <span class="seal">AI</span></h1>
+  <p>Tell us about your computer and a model. We paint an ink-wash video explaining the answer, followed by a detailed report.</p>
+</header>
+<main>
+<form id="form">
+  <h2>My computer specifications</h2>
+  <label for="model"><span>Model name with size <button type="button" class="i" aria-label="About model name" data-tip="The model’s name with its size, such as 8B (8 billion parameters). Parameters are the learned numbers inside the model. More parameters means more memory.">i</button></span>
+    <input id="model" value="Qwen3.8-27B" required>
+    <small>e.g. Qwen3.8-27B, Llama 3.1 8B, Qwen3.5-397B-A17B, Mixtral 8x7B</small></label>
+  <label for="modelType"><span>Model type <button type="button" class="i" aria-label="About model type" data-tip="Dense models use all their parameters for every word. Mixture-of-experts (MoE) models store many experts but use only a few per word: they need the full memory, yet run faster. Auto reads the type from the name (for example A17B or 8x7B).">i</button></span>
+    <select id="modelType">
+      <option value="auto">Auto-detect from name</option>
+      <option value="dense">Dense</option>
+      <option value="moe">Mixture-of-experts (MoE)</option>
+    </select></label>
+  <label for="activeB" id="activeWrap" class="hide"><span>Active parameters (B) <button type="button" class="i" aria-label="About active parameters" data-tip="Only for MoE models: how many parameters are used for each word, shown in names like A17B (17 billion). It does not lower the memory needed, but it makes the model faster. Leave blank to use the detected value.">i</button></span>
+    <input id="activeB" type="number" min="0" step="any" placeholder="e.g. 17">
+    <small>Optional. Check the model card if the name does not say.</small></label>
+  <label for="gpuType"><span>GPU configuration <button type="button" class="i" aria-label="About GPU configuration" data-tip="Dedicated GPU: a separate graphics card with its own fast memory (VRAM). CPU only: no usable GPU, so the model runs from RAM and is slow. Apple Silicon: the CPU and GPU share one pool of memory.">i</button></span>
+    <select id="gpuType">
+      <option value="dedicated">Dedicated GPU</option>
+      <option value="cpu">CPU only / no dedicated GPU</option>
+      <option value="apple">Apple Silicon / unified memory</option>
+    </select></label>
+  <label for="ramGB"><span><span id="ramLabel">Free system RAM (GB)</span> <button type="button" class="i" aria-label="About memory" data-tip="The memory your computer can spare for the model. Close other apps first. On a Mac this is the unified memory, which the CPU and GPU share.">i</button></span>
+    <input id="ramGB" type="number" min="1" value="32" required>
+    <small id="ramHint">Free memory, not total. Leave 4–8 GB for the operating system.</small></label>
+  <label class="gpu" for="gpuMake"><span>GPU manufacturer <button type="button" class="i" aria-label="About GPU manufacturer" data-tip="Affects software support. NVIDIA works with the most tools, while AMD, Intel and others work with some tools but may need extra setup. It does not change the memory estimate.">i</button></span>
+    <select id="gpuMake"><option>NVIDIA</option><option>AMD</option><option>Intel</option><option>Other</option></select></label>
+  <label class="gpu" for="vramGB"><span>GPU VRAM (GB) <button type="button" class="i" aria-label="About VRAM" data-tip="The GPU’s own fast memory. If the whole model fits in VRAM it runs fastest. If not, part of it spills into system RAM and slows down.">i</button></span>
+    <input id="vramGB" type="number" min="0" value="8">
+    <small>Total video memory on the card (shown in Task Manager or nvidia-smi).</small></label>
+  <label for="contextTokens"><span>Context length (tokens) <button type="button" class="i" aria-label="About context length" data-tip="How much text the model can keep in mind at once, counting both your messages and its replies. Longer context needs more memory for the KV cache, the model’s working notes.">i</button></span>
+    <input id="contextTokens" type="number" min="512" step="512" value="8192">
+    <small id="ctxHint"></small>
+    <span class="chips" id="chips" role="group" aria-label="Context length presets"></span></label>
+  <p class="detected" id="detected" aria-live="polite"></p>
+  <div class="row"><button id="go" type="submit">Generate video</button><span id="msg" role="status" aria-live="polite"></span></div>
+</form>
+
+<div id="prog" role="progressbar" aria-label="Video render progress" aria-valuemin="0" aria-valuemax="100"><div></div></div>
+<video id="video" controls playsinline></video>
+<a id="dl" download>⬇ Download MP4</a>
+
+<section id="report" class="hide" aria-labelledby="reportTitle">
+  <h2 id="reportTitle">Detailed report</h2>
+  <div id="result">
+    <div id="verdict"><span class="stamp" id="stamp"></span><div><h2 id="vTitle"></h2><p id="vText"></p><p class="vinfo">How is this decided? <button type="button" class="i" aria-label="About the verdict" data-tip="Yes: the model fits in your fastest memory. Slowly: it fits only by spilling into RAM, or by running on the CPU. No: even your total usable memory is not enough.">i</button></p></div></div>
+    <div id="notes"></div>
+  </div>
+  <div class="scroll"><table>
+    <caption>Memory needed at each precision</caption>
+    <thead><tr><th>Precision <button type="button" class="i" aria-label="About precision" data-tip="How many bits are used for each stored number. FP32 and BF16 keep full quality. INT8 and INT4 are compressed (quantized) with a small quality loss. INT2 is tiny but noticeably worse.">i</button></th><th>Memory needed <button type="button" class="i" aria-label="About memory needed" data-tip="Weights, plus 20% runtime overhead, plus a rough estimate for the KV cache at your context length.">i</button></th><th>Compared with your memory</th><th>Result <button type="button" class="i" aria-label="About result" data-tip="Brushed check: fits in your fastest memory. Open ink circle: fits but runs slower. Brushed cross: does not fit.">i</button></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <details>
+    <summary>How these numbers are estimated</summary>
+    <ul>
+      <li>Weights = parameters × bits per number ÷ 8. For a mixture-of-experts model, every expert must be stored, so the total size counts, not the active size.</li>
+      <li>Runtime overhead is assumed to be 20% on top of the weights.</li>
+      <li>The KV cache (the model’s working notes) is a rough estimate that grows with context length.</li>
+      <li>Apple Silicon: about 75% of unified memory is usable by the GPU. CPU only: your free RAM minus 4 GB.</li>
+      <li>INT4 and INT2 use the nominal bit count. Real 4-bit files (such as Q4_K_M) average about 4.5–5 bits, so expect roughly 10–25% more.</li>
+      <li>Sizes use GB = 10⁹ bytes. Your system may report GiB (2³⁰ bytes), which is about 7% smaller.</li>
+    </ul>
+  </details>
+</section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+// Works even if this file is opened from another origin (file://, Live Server…): always talk to the render server.
+const API = location.protocol.startsWith('http') ? '' : 'http://localhost:3123';
+async function api(path, opts) {
+  let r;
+  try { r = await fetch(API + path, opts); }
+  catch { throw new Error('Cannot reach the render server. Run "npm run explainer" in the project folder, then open http://localhost:3123'); }
+  const text = await r.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch { throw new Error(`Render server not found at ${API || location.origin} (got "${text.slice(0, 40)}"). Run "npm run explainer" and open http://localhost:3123`); }
+  if (!r.ok || data.error) throw new Error(data.error || 'Request failed');
+  return data;
+}
+function say(t, err) { $('msg').textContent = t; $('msg').className = err ? 'err' : ''; }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => n >= 100 ? Math.round(n).toLocaleString() : n.toFixed(1);
+
+/* ---------- form behaviour ---------- */
+const CTX = [[4096, '4K short chat'], [8192, '8K chat'], [32768, '32K documents'], [131072, '128K very long']];
+$('chips').innerHTML = CTX.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="false">${l}</button>`).join('');
+$('chips').onclick = e => { const b = e.target.closest('button'); if (b) { $('contextTokens').value = b.dataset.v; update(); } };
+
+function syncGpu() {
+  const t = $('gpuType').value;
+  document.querySelectorAll('.gpu').forEach(el => el.classList.toggle('hide', t !== 'dedicated'));
+  $('ramLabel').textContent = t === 'apple' ? 'Unified memory (GB)' : 'Free system RAM (GB)';
+  $('ramHint').textContent = t === 'apple'
+    ? 'Total memory of your Mac. About 75% of it can be used by the model.'
+    : 'Free memory, not total. Leave 4–8 GB for the operating system.';
+}
+
+/* ---------- model name parsing ---------- */
+function parseModel(name) {
+  let total = null, active = null, moe = false;
+  const grid = name.match(/(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*b(?![a-z])/i);   // Mixtral 8x7B
+  const act = name.match(/(?<![a-z])a(\d+(?:\.\d+)?)b(?![a-z])/i);         // …-A17B
+  if (grid) { total = +grid[1] * +grid[2]; moe = true; }
+  else {
+    const m = name.match(/(?<![a-z])(\d+(?:\.\d+)?)\s*([bm])(?![a-z])/i);
+    if (m) total = m[2].toLowerCase() === 'm' ? +m[1] / 1000 : +m[1];
+  }
+  if (act && total && +act[1] < total) { active = +act[1]; moe = true; }
+  return { total, active, moe };
+}
+
+/* ---------- memory maths ---------- */
+const PREC = [['FP32', 32], ['BF16', 16], ['INT8', 8], ['INT4', 4], ['INT2', 2]];
+function calc() {
+  const name = $('model').value.trim(), type = $('gpuType').value;
+  const ram = +$('ramGB').value || 0, vram = +$('vramGB').value || 0, ctx = +$('contextTokens').value || 0;
+  const p = parseModel(name), mode = $('modelType').value, ov = +$('activeB').value;
+  if (mode === 'dense') { p.moe = false; p.active = null; } else if (mode === 'moe') p.moe = true;
+  if (p.moe && p.total && ov > 0 && ov < p.total) p.active = ov;
+  if (!p.total) return { p, ok: false };
+  const kv = ctx * (p.active || p.total) * 8e-6;                     // rough GB
+  const need = bits => p.total * bits / 8 * 1.2 + kv;
+  let fast, slowLimit;
+  if (type === 'dedicated') { fast = vram; slowLimit = vram + Math.max(ram - 4, 0); }
+  else if (type === 'apple') { fast = slowLimit = ram * 0.75; }
+  else { fast = 0; slowLimit = Math.max(ram - 4, 0); }
+  const rows = PREC.map(([label, bits]) => {
+    const n = need(bits);
+    let status = 'no';
+    if (type === 'cpu') status = n <= slowLimit ? 'slow' : 'no';
+    else if (n <= fast) status = 'ok';
+    else if (n <= slowLimit) status = 'slow';
+    return { label, bits, n, status };
+  });
+  return { ok: true, p, type, rows, fast, slowLimit, kv, ctx };
+}
+
+function update() {
+  syncGpu();
+  const ctx = +$('contextTokens').value || 0;
+  $('ctxHint').textContent = `${ctx.toLocaleString()} tokens ≈ ${Math.round(ctx * 0.75).toLocaleString()} words of chat or documents`;
+  document.querySelectorAll('#chips button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === ctx)));
+  const mode = $('modelType').value, det = parseModel($('model').value.trim());
+  $('activeWrap').classList.toggle('hide', !(mode === 'moe' || (mode === 'auto' && det.moe)));
+  $('activeB').placeholder = det.active ? String(det.active) : 'e.g. 17';
+  const src = mode === 'auto' ? 'Detected' : 'Using your choice';
+  const c = calc();
+  const v = $('verdict');
+  if (!c.ok) {
+    $('detected').textContent = 'Add the size to the model name (for example 8B or 70B) to see an instant answer.';
+    v.className = ''; $('stamp').textContent = '?'; $('vTitle').textContent = 'I can’t find a size in that model name';
+    $('vText').textContent = 'Names like “Llama 3.1 8B”, “Qwen3.8-27B” or “Mixtral 8x7B” work best.';
+    $('rows').innerHTML = ''; $('notes').innerHTML = ''; return;
+  }
+  const { p } = c;
+  const name = $('model').value.trim();
+  $('detected').innerHTML = p.moe
+    ? `${src}: <b>${fmt(p.total)}B total</b>${p.active ? ` · <b>${fmt(p.active)}B active per token</b>` : ''} · mixture-of-experts`
+    : `${src}: <b>${fmt(p.total)}B parameters</b> · dense model`;
+
+  const best = c.rows.find(r => r.status !== 'no' && r.label !== 'FP32' && r.label !== 'INT2') || c.rows.find(r => r.status !== 'no');
+  const bestOk = c.rows.find(r => r.status === 'ok' && r.bits <= 16 && r.bits >= 4);
+  const pick = bestOk || best;
+  let cls, stamp, title, text;
+  if (!pick) {
+    cls = 'no'; stamp = 'No';
+    const maxB = Math.max(0, (c.slowLimit / 1.2) * 2);               // 4-bit: 0.5 GB per B
+    const smallest = c.rows[c.rows.length - 1];
+    title = `${esc(name)} is too large for this computer`;
+    text = `Even the smallest version needs about ${fmt(smallest.n)} GB, and you have about ${fmt(c.slowLimit)} GB usable (${fmt(smallest.n / Math.max(c.slowLimit, .1))}× short). `
+      + `At 4-bit, this machine could run a model of roughly ${fmt(Math.max(maxB * 0.8, 0))}B parameters or less. Or add memory, or use a hosted version.`;
+  } else if (pick.status === 'ok') {
+    cls = 'ok'; stamp = 'Yes';
+    title = `${esc(name)} fits at ${pick.label}`;
+    text = `Needs about ${fmt(pick.n)} GB and you have about ${fmt(c.fast)} GB in fast memory, so it should run at a comfortable speed.`;
+  } else {
+    cls = 'slow'; stamp = 'Slowly';
+    title = `${esc(name)} runs, but slowly, at ${pick.label}`;
+    text = c.type === 'cpu'
+      ? `It fits in RAM (${fmt(pick.n)} GB), but a CPU is much slower than a GPU. Expect a few words per second.`
+      : `It does not fit on the GPU alone, so part of it spills into system RAM. That works but is noticeably slower.`;
+  }
+  v.className = cls; $('stamp').textContent = stamp; $('vTitle').innerHTML = title; $('vText').textContent = text;
+
+  const limit = c.type === 'dedicated' ? c.slowLimit : c.slowLimit;
+  $('rows').innerHTML = c.rows.map(r => {
+    const pct = Math.min(100, 100 * r.n / Math.max(c.slowLimit, c.fast, r.n));
+    const mark = Math.min(100, 100 * c.slowLimit / Math.max(c.slowLimit, r.n));
+    const glyph = {
+      ok: '<path d="M4 14 L10 21 L23 5" stroke-width="3.4"/>',
+      slow: '<path d="M21 6 C16 1 6 2 4 12 C2 21 11 26 18 22 C24 19 25 12 23 9" stroke-width="3"/>',
+      no: '<path d="M5 5 L22 22" stroke-width="3.4"/><path d="M22 5 L5 22" stroke-width="3"/>'
+    }[r.status];
+    const label = { ok: 'Fits', slow: 'Fits, slowly', no: 'Too big' }[r.status];
+    const res = `<span class="mark ${r.status}"><svg viewBox="0 0 27 27" aria-hidden="true">${glyph}</svg>${label}</span>`;
+    return `<tr class="${pick && r.label === pick.label ? 'best' : ''}"><td>${r.label}</td><td class="n">${fmt(r.n)} GB</td>
+      <td><div class="bar" title="Your memory limit marked at ${fmt(mark)}%"><i class="${r.status === 'no' ? 'over' : ''}" style="width:${pct}%"></i></div></td><td>${res}</td></tr>`;
+  }).join('');
+
+  const notes = [];
+  if (p.moe && p.active) notes.push(`<b>Mixture-of-experts:</b> all ${fmt(p.total)}B parameters must be stored in memory, but only about ${fmt(p.active)}B are used for each token. Memory is set by the total, while speed is closer to that of a ${fmt(p.active)}B model.`);
+  else if (p.moe) notes.push(`<b>Mixture-of-experts:</b> every expert must be stored in memory, but only a few are used for each token, so it runs faster than its total size suggests.`);
+  if (c.kv > c.slowLimit * 0.25) notes.push(`<b>Long context:</b> the KV cache at ${c.ctx.toLocaleString()} tokens is roughly ${fmt(c.kv)} GB. A shorter context frees memory.`);
+  if (c.type === 'apple') notes.push(`<b>Apple Silicon:</b> about ${fmt(c.fast)} GB of your ${fmt(+$('ramGB').value)} GB is usable for the model.`);
+  $('notes').innerHTML = notes.map(n => `<p class="note">${n}</p>`).join('');
+}
+// The detailed report belongs to the rendered video, so hide it once the inputs no longer match.
+const showReport = on => $('report').classList.toggle('hide', !on);
+const onEdit = () => { showReport(false); update(); };
+['model', 'activeB', 'ramGB', 'vramGB', 'contextTokens'].forEach(k => $(k).addEventListener('input', onEdit));
+['gpuType', 'modelType', 'gpuMake'].forEach(k => $(k).addEventListener('change', onEdit));
+$('chips').addEventListener('click', e => { if (e.target.closest('button')) showReport(false); });
+update();
+
+/* ---------- info icons: hover, focus, or click/tap to pin; Esc or outside click closes ---------- */
+const tip = document.createElement('div'); tip.id = 'tipbox'; tip.setAttribute('role', 'tooltip'); document.body.appendChild(tip);
+let cur = null, pinned = null;
+function showTip(b) {
+  tip.textContent = b.dataset.tip; tip.style.display = 'block';
+  const r = b.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8) + 'px';
+  tip.style.top = (r.bottom + 8 + h > innerHeight - 8 ? r.top - h - 8 : r.bottom + 8) + 'px';
+  b.setAttribute('aria-describedby', 'tipbox'); cur = b;
+}
+function hideTip() {
+  tip.style.display = 'none';
+  if (cur) { cur.removeAttribute('aria-describedby'); cur.setAttribute('aria-expanded', 'false'); }
+  cur = pinned = null;
+}
+document.querySelectorAll('button.i').forEach(b => {
+  b.setAttribute('aria-expanded', 'false');
+  b.addEventListener('mouseenter', () => { if (!pinned) showTip(b); });
+  b.addEventListener('mouseleave', () => { if (!pinned) hideTip(); });
+  b.addEventListener('focus', () => { if (!pinned) showTip(b); });
+  b.addEventListener('blur', () => { if (pinned !== b) hideTip(); });
+  b.addEventListener('click', e => {
+    e.preventDefault();
+    if (pinned === b) return hideTip();
+    hideTip(); showTip(b); pinned = b; b.setAttribute('aria-expanded', 'true');
+  });
+});
+document.addEventListener('click', e => { if (!e.target.closest('button.i')) hideTip(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
+addEventListener('scroll', hideTip, true);
+
+/* ---------- render the video (unchanged protocol) ---------- */
+$('form').onsubmit = async e => {
+  e.preventDefault();
+  const body = Object.fromEntries(['model', 'modelType', 'activeB', 'ramGB', 'gpuType', 'gpuMake', 'vramGB', 'contextTokens'].map(k => [k, $(k).value]));
+  $('go').disabled = true; $('video').style.display = $('dl').style.display = 'none'; showReport(false);
+  say('Preparing the ink…');
+  try {
+    const {id} = await api('/api/render', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    $('prog').style.display = 'block';
+    for (;;) {
+      const s = await api('/api/jobs/' + id);
+      const pct = Math.round(100 * (s.progress || 0));
+      $('prog').firstElementChild.style.width = pct + '%'; $('prog').setAttribute('aria-valuenow', pct);
+      if (s.status === 'error') throw new Error(s.error || 'Render failed');
+      if (s.status === 'done') {
+        $('video').src = API + s.url; $('video').style.display = 'block'; $('video').play().catch(() => {});
+        $('dl').href = API + s.url; $('dl').download = body.model.replace(/[^\w\.-]+/g, '_') + '-explainer.mp4'; $('dl').style.display = 'inline-block';
+        update(); showReport(true);
+        say('Your painting is ready. See the detailed report below the video.');
+        break;
+      }
+      say(s.status === 'queued' ? 'Waiting for the brush…' : `Painting the video… ${pct}%`);
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  } catch (err) { say(err.message, true); }
+  $('go').disabled = false;
+};
+</script>
+</body>
+</html>
