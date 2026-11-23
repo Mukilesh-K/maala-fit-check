@@ -149,15 +149,17 @@
 <script>
 const $ = id => document.getElementById(id);
 // Works even if this file is opened from another origin (file://, Live Server…): always talk to the render server.
-const API = location.protocol.startsWith('http') ? '' : 'http://localhost:3123';
+const HOSTED_API = 'https://maala-fit-check-api.onrender.com'; // URL of the deployed server.mjs
+const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const API = !location.protocol.startsWith('http') ? 'http://localhost:3123' : LOCAL ? '' : HOSTED_API;
 async function api(path, opts) {
   let r;
   try { r = await fetch(API + path, opts); }
-  catch { throw new Error('Cannot reach the render server. Run "npm run explainer" in the project folder, then open http://localhost:3123'); }
+  catch { throw new Error('Cannot reach the render server. Run "npm start" in the project folder, then open http://localhost:3123'); }
   const text = await r.text();
   let data;
   try { data = JSON.parse(text); }
-  catch { throw new Error(`Render server not found at ${API || location.origin} (got "${text.slice(0, 40)}"). Run "npm run explainer" and open http://localhost:3123`); }
+  catch { throw new Error(`Render server not found at ${API || location.origin} (got "${text.slice(0, 40)}"). Run "npm start" and open http://localhost:3123`); }
   if (!r.ok || data.error) throw new Error(data.error || 'Request failed');
   return data;
 }
