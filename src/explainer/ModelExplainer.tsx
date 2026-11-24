@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef} from 'react';
+import React, {useLayoutEffect, useMemo, useRef} from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {W, H, PAPER, paper} from './brush';
 import {ExplainerProps, analyse} from './math';
@@ -10,7 +10,7 @@ export const ModelExplainer: React.FC<ExplainerProps> = props => {
   const ref = useRef<HTMLCanvasElement>(null);
   const frame = useCurrentFrame();
   const data = useMemo(() => ({...analyse(props), props}), [props]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const ctx = ref.current?.getContext('2d');
     if (ctx) paintFrame(ctx, frame, data, paper);
   }, [frame, data]);

@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.mjs",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts ModelExplainer out/model-explainer.mp4"
   },
@@ -11,12 +13,14 @@
     "@remotion/bundler": "^4.0.300",
     "@remotion/cli": "^4.0.300",
     "@remotion/renderer": "^4.0.300",
+    "@remotion/web-renderer": "4.0.546",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remotion": "^4.0.300"
   },
   "devDependencies": {
     "@types/react": "^18.3.18",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vite": "^8.3.8"
   }
 }
